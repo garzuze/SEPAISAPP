@@ -1,16 +1,15 @@
-# sepais_app_2
-
-A new Flutter project.
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+# SEPAIS
+Software que visa facilitar as interações entre a Seção Pedagógica de Assuntos Estudantis e os responsáveis dos estudantes, auxiliando em processos como liberação antecipada de alunos e envio de recados.
+<h2>Objetivos específicos</h2>
+ <ul>
+ <li>Modelar um banco de dados para armazenamento de informações do sistema de comunicação digital</li>
+ <li>Criar uma interface que possa auxiliar na liberação dos alunos, caso sejam liberados antes do horário regular</li>
+ <li>Elaborar uma função que notifique — em caso de liberação antecipada — o horário da saída dos estudantes para os seus responsáveis cadastrados</li>
+  <li>Criar uma interface que permita aos responsáveis justificar a saída antecipada de seu(s) dependente(s)</li>
+ </ul>
+<p align="center">
+ <img src="https://skillicons.dev/icons?i=html,css,php,js,jquery,tailwind,mysql,github&perline=4" />
+</p> 
+<p align="center">
+ <img style="font-align: center;" src="https://mlrh.com.br/sepais/public/static/sepais_logo2.png">
+</p>
