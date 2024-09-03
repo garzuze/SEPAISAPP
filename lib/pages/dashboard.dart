@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'dart:convert';
 
 class MainPage extends StatefulWidget {
@@ -56,6 +57,16 @@ class _MainPageState extends State<MainPage> {
       setState(() {
         decodedInfo = 'Failed to decode JWT: $e';
       });
+    }
+  }
+
+  String _formatTime(String dateTimeString) {
+    try {
+      final dateTime = DateTime.parse(dateTimeString);
+      final formattedTime = DateFormat('HH:mm').format(dateTime);
+      return formattedTime;
+    } catch (e) {
+      return 'Invalid Date';
     }
   }
 
@@ -259,8 +270,7 @@ class _MainPageState extends State<MainPage> {
                   final dependent = dependents[index];
                   final isLiberated =
                       _isDependentLiberated(dependent['id_aluno']);
-                  final liberationTime =
-                      _getLiberationTime(dependent['id_aluno']);
+                  final liberationTime = _formatTime(_getLiberationTime(dependent['id_aluno']));
 
                   return ListTile(
                     title: Text(dependent['nome_aluno']),
@@ -272,7 +282,7 @@ class _MainPageState extends State<MainPage> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Liberado em: $liberationTime'),
+                              Text('Liberado às $liberationTime'),
                               ElevatedButton(
                                 onPressed: () {
                                   // Implementar a lógica para autorizar a saída
