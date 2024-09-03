@@ -12,12 +12,13 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  int _selectedIndex = 0; // Index para controlar qual página o user está
+  int _selectedIndex = 0; // Index para controlar páginas
   String? jwtToken; // JWT token para fazer requisições
-  List<dynamic> dependents = []; // Lista de dependente
-  String? userFirstName;
-  String decodedInfo = '';
-  List<dynamic> messages = [];
+  List<dynamic> dependents = []; // Lista de dependentes
+  List<dynamic> liberatedDependents = []; // Lista de dependentes liberados
+  String? userFirstName; // Primeiro nome do responsável
+  String decodedInfo = ''; // Informações extraídas do token
+  List<dynamic> messages = []; // Placeholder para mensagens
 
   @override
   void initState() {
@@ -34,11 +35,10 @@ class _MainPageState extends State<MainPage> {
         _decodeJWT(jwtToken!);
         await _fetchDependents(jwtToken!);
         await _fetchMessages(jwtToken!);
+        await _fetchLiberatedDependents(jwtToken!);
       }
     } catch (e) {
-      setState(() {
-        decodedInfo = 'errro: $e';
-      });
+      decodedInfo = 'Error initializing data: $e';
     }
   }
 
@@ -71,9 +71,7 @@ class _MainPageState extends State<MainPage> {
         },
       );
 
-      print('resposta: ${response.body}');
-
-      // Remover o 0 da resposta
+      // Remove any leading unexpected characters
       var cleanResponse = response.body.trim();
       final jsonStartIndex = cleanResponse.indexOf('{');
       if (jsonStartIndex > 0) {
@@ -84,7 +82,6 @@ class _MainPageState extends State<MainPage> {
         final jsonResponse = jsonDecode(cleanResponse);
 
         if (jsonResponse['status'] == true) {
-          // Extrair dependentes
           setState(() {
             dependents = jsonResponse['message'];
           });
@@ -118,9 +115,7 @@ class _MainPageState extends State<MainPage> {
         },
       );
 
-      print('resposta: ${response.body}');
-
-      // Remover o 0 da resposta
+      // Remover 0 da resposta
       var cleanResponse = response.body.trim();
       final jsonStartIndex = cleanResponse.indexOf('{');
       if (jsonStartIndex > 0) {
@@ -131,14 +126,57 @@ class _MainPageState extends State<MainPage> {
         final jsonResponse = jsonDecode(cleanResponse);
 
         if (jsonResponse['status'] == true) {
-          // Extrair dependentes
           setState(() {
             messages = jsonResponse['message'];
           });
         } else {
           setState(() {
             decodedInfo =
-                'Não conseguimos achar mensagens: ${jsonResponse['message']}';
+                'Nenhum recado encontrado: ${jsonResponse['message']}';
+          });
+        }
+      } else {
+        setState(() {
+          decodedInfo = 'Erro: ${response.reasonPhrase}';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        decodedInfo = 'Erro: $e';
+      });
+    }
+  }
+
+  Future<void> _fetchLiberatedDependents(String jwtToken) async {
+    try {
+      final url = Uri.parse(
+          'https://mlrh.com.br/sepais/public/api/get_liberados_sepae.php');
+
+      final response = await http.post(
+        url,
+        headers: {
+          'Authorization': jwtToken,
+        },
+      );
+
+      // Remover 0 da resposta
+      var cleanResponse = response.body.trim();
+      final jsonStartIndex = cleanResponse.indexOf('{');
+      if (jsonStartIndex > 0) {
+        cleanResponse = cleanResponse.substring(jsonStartIndex);
+      }
+
+      if (response.statusCode == 200) {
+        final jsonResponse = jsonDecode(cleanResponse);
+
+        if (jsonResponse['status'] == true) {
+          setState(() {
+            liberatedDependents = jsonResponse['message'];
+          });
+        } else {
+          setState(() {
+            decodedInfo =
+                'Erro ao buscar liberação: ${jsonResponse['message']}';
           });
         }
       } else {
@@ -157,7 +195,18 @@ class _MainPageState extends State<MainPage> {
     return fullName.split(' ').first;
   }
 
-  // Método para alterar entre as telas
+  bool _isDependentLiberated(int idAluno) {
+    return liberatedDependents
+        .any((dependent) => dependent['id_aluno'] == idAluno);
+  }
+
+  String _getLiberationTime(int idAluno) {
+    final dependent = liberatedDependents
+        .firstWhere((d) => d['id_aluno'] == idAluno, orElse: () => null);
+    return dependent != null ? dependent['data'] : '';
+  }
+
+  // Método para trocar páginas
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -189,7 +238,7 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
-  // Widget para tela de depedentes
+  // Widget para a tela de depedentes
   Widget _buildDependentsScreen() {
     return Scaffold(
         backgroundColor: Colors.grey[50],
@@ -208,9 +257,34 @@ class _MainPageState extends State<MainPage> {
                 itemCount: dependents.length,
                 itemBuilder: (context, index) {
                   final dependent = dependents[index];
+                  final isLiberated =
+                      _isDependentLiberated(dependent['id_aluno']);
+                  final liberationTime =
+                      _getLiberationTime(dependent['id_aluno']);
+
                   return ListTile(
                     title: Text(dependent['nome_aluno']),
-                    subtitle: Text('Turma: ${dependent['turma']}'),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Turma: ${dependent['turma']}'),
+                        if (isLiberated)
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Liberado em: $liberationTime'),
+                              ElevatedButton(
+                                onPressed: () {
+                                  // Implementar a lógica para autorizar a saída
+                                },
+                                child: const Text('Autorizar Saída'),
+                              ),
+                            ],
+                          )
+                        else
+                          const Text('Não liberado'),
+                      ],
+                    ),
                   );
                 },
               ),
