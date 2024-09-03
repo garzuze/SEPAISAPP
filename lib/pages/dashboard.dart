@@ -2,6 +2,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'message_detail_page.dart';
 import 'package:intl/intl.dart';
 import 'dart:convert';
 
@@ -270,7 +271,8 @@ class _MainPageState extends State<MainPage> {
                   final dependent = dependents[index];
                   final isLiberated =
                       _isDependentLiberated(dependent['id_aluno']);
-                  final liberationTime = _formatTime(_getLiberationTime(dependent['id_aluno']));
+                  final liberationTime =
+                      _formatTime(_getLiberationTime(dependent['id_aluno']));
 
                   return ListTile(
                     title: Text(dependent['nome_aluno']),
@@ -283,12 +285,15 @@ class _MainPageState extends State<MainPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text('Liberado às $liberationTime'),
-                              ElevatedButton(
-                                onPressed: () {
-                                  // Implementar a lógica para autorizar a saída
-                                },
-                                child: const Text('Autorizar Saída'),
-                              ),
+                              GestureDetector(
+                                  onTap: () {},
+                                  child: Text(
+                                    'Autorizar saída',
+                                    style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.green[800]),
+                                  )),
                             ],
                           )
                         else
@@ -305,31 +310,48 @@ class _MainPageState extends State<MainPage> {
   // Widget para tela de recados
   Widget _buildMessagesScreen() {
     return Scaffold(
-        backgroundColor: Colors.grey[50],
-        body: SafeArea(
-            child: Column(children: [
-          const SizedBox(height: 25),
-          const Text(
-            'Recados',
-            style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 20),
-          if (messages.isNotEmpty)
-            Expanded(
-              child: ListView.builder(
-                itemCount: messages.length,
-                itemBuilder: (context, index) {
-                  final message = messages[index];
-                  return ListTile(
-                    title: Text(message['titulo']),
-                    subtitle: Text(message['recado']),
-                  );
-                },
+      backgroundColor: Colors.grey[50],
+      body: SafeArea(
+        child: Column(
+          children: [
+            const SizedBox(height: 25),
+            const Text(
+              'Recados',
+              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+            if (messages.isNotEmpty)
+              Expanded(
+                child: ListView.builder(
+                  itemCount: messages.length,
+                  itemBuilder: (context, index) {
+                    final message = messages[index];
+                    return ListTile(
+                      title: Text(message['titulo']),
+                      subtitle: Text(message['recado']),
+                      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => MessageDetailPage(
+                              message: message,
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              )
+            else
+              const Text(
+                'Nenhum recado disponível.',
+                style: TextStyle(fontSize: 16),
               ),
-            )
-          else
-            const Text('Nenhum recado disponível.',
-                style: TextStyle(fontSize: 16)),
-        ])));
+          ],
+        ),
+      ),
+    );
   }
 }
