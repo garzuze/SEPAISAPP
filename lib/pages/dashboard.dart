@@ -326,9 +326,14 @@ class _MainPageState extends State<MainPage> {
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
                     final message = messages[index];
+                    final messageText = message['recado'];
+                    final truncatedMessage = messageText.length > 50
+                        ? '${messageText.substring(0, 50)}...'
+                        : messageText;
+
                     return ListTile(
                       title: Text(message['titulo']),
-                      subtitle: Text(message['recado']),
+                      subtitle: Text(truncatedMessage),
                       trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                       onTap: () {
                         Navigator.push(
@@ -345,10 +350,8 @@ class _MainPageState extends State<MainPage> {
                 ),
               )
             else
-              const Text(
-                'Nenhum recado disponível.',
-                style: TextStyle(fontSize: 16),
-              ),
+              const Text('Nenhum recado disponível.',
+                  style: TextStyle(fontSize: 16)),
           ],
         ),
       ),
