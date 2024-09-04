@@ -159,6 +159,41 @@ class _MainPageState extends State<MainPage> {
     }
   }
 
+  Future<void> _authorizeExit(int alunoId) async {
+    try {
+      final url =
+          Uri.parse('https://mlrh.com.br/sepais/public/api/update_auth.php');
+
+      final response = await http.post(
+        url,
+        headers: {
+          'Authorization': jwtToken!,
+        },
+        body: {
+          'aluno_id': alunoId.toString(),
+        },
+      );
+
+      final jsonResponse = jsonDecode(response.body);
+
+      if (jsonResponse['status'] == true) {
+        _showMessage('Saída autorizada com sucesso!');
+      } else {
+        _showMessage('Falha ao autorizar a saída. Tente novamente.');
+      }
+    } catch (e) {
+      _showMessage('Erro: $e');
+    }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+      ),
+    );
+  }
+
   Future<void> _fetchLiberatedDependents(String jwtToken) async {
     try {
       final url = Uri.parse(
@@ -253,58 +288,66 @@ class _MainPageState extends State<MainPage> {
   // Widget para a tela de depedentes
   Widget _buildDependentsScreen() {
     return Scaffold(
-        backgroundColor: Colors.grey[50],
-        body: SafeArea(
-            child: Column(children: [
-          const SizedBox(height: 25),
-          if (userFirstName != null)
-            Text(
-              'Olá, $userFirstName!',
-              style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-            ),
-          const SizedBox(height: 20),
-          if (dependents.isNotEmpty)
-            Expanded(
-              child: ListView.builder(
-                itemCount: dependents.length,
-                itemBuilder: (context, index) {
-                  final dependent = dependents[index];
-                  final isLiberated =
-                      _isDependentLiberated(dependent['id_aluno']);
-                  final liberationTime =
-                      _formatTime(_getLiberationTime(dependent['id_aluno']));
+      backgroundColor: Colors.grey[50],
+      body: SafeArea(
+        child: Column(
+          children: [
+            const SizedBox(height: 25),
+            if (userFirstName != null)
+              Text(
+                'Olá, $userFirstName!',
+                style:
+                    const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+              ),
+            const SizedBox(height: 20),
+            if (dependents.isNotEmpty)
+              Expanded(
+                child: ListView.builder(
+                  itemCount: dependents.length,
+                  itemBuilder: (context, index) {
+                    final dependent = dependents[index];
+                    final isLiberated =
+                        _isDependentLiberated(dependent['id_aluno']);
+                    final liberationTime =
+                        _formatTime(_getLiberationTime(dependent['id_aluno']));
 
-                  return ListTile(
-                    title: Text(dependent['nome_aluno']),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Turma: ${dependent['turma']}'),
-                        if (isLiberated)
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Liberado às $liberationTime'),
-                              GestureDetector(
-                                  onTap: () {},
+                    return ListTile(
+                      title: Text(dependent['nome_aluno']),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Turma: ${dependent['turma']}'),
+                          if (isLiberated)
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Liberado às $liberationTime'),
+                                GestureDetector(
+                                  onTap: () =>
+                                      _authorizeExit(dependent['id_aluno']),
                                   child: Text(
                                     'Autorizar saída',
                                     style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.green[800]),
-                                  )),
-                            ],
-                          )
-                        else
-                          const Text('Não liberado'),
-                      ],
-                    ),
-                  );
-                },
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.green[800],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )
+                          else
+                            const Text('Não liberado'),
+                        ],
+                      ),
+                    );
+                  },
+                ),
               ),
-            ),
-        ])));
+          ],
+        ),
+      ),
+    );
   }
 
   // Widget para tela de recados
