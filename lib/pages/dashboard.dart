@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'message_detail_page.dart';
 import 'package:intl/intl.dart';
+import 'liberation_page.dart';
 import 'dart:convert';
 
 class MainPage extends StatefulWidget {
@@ -159,7 +160,7 @@ class _MainPageState extends State<MainPage> {
     }
   }
 
-  Future<void> _authorizeExit(int alunoId) async {
+  Future<bool> _authorizeExit(int alunoId) async {
     try {
       final url =
           Uri.parse('https://mlrh.com.br/sepais/public/api/update_auth.php');
@@ -176,22 +177,10 @@ class _MainPageState extends State<MainPage> {
 
       final jsonResponse = jsonDecode(response.body);
 
-      if (jsonResponse['status'] == true) {
-        _showMessage('Saída autorizada com sucesso!');
-      } else {
-        _showMessage('Falha ao autorizar a saída. Tente novamente.');
-      }
+      return jsonResponse['status'] == true;
     } catch (e) {
-      _showMessage('Erro: $e');
+      return false;
     }
-  }
-
-  void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-      ),
-    );
   }
 
   Future<void> _fetchLiberatedDependents(String jwtToken) async {
@@ -323,8 +312,25 @@ class _MainPageState extends State<MainPage> {
                               children: [
                                 Text('Liberado às $liberationTime'),
                                 GestureDetector(
-                                  onTap: () =>
-                                      _authorizeExit(dependent['id_aluno']),
+                                  onTap: () async {
+                                    final success = await _authorizeExit(
+                                        dependent['id_aluno']);
+                                    if (success) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                            content: Text(
+                                                'Saída autorizada com sucesso!')),
+                                      );
+                                    } else {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                            content: Text(
+                                                'Falha ao autorizar a saída. Tente novamente.')),
+                                      );
+                                    }
+                                  },
                                   child: Text(
                                     'Autorizar saída',
                                     style: TextStyle(
@@ -337,7 +343,27 @@ class _MainPageState extends State<MainPage> {
                               ],
                             )
                           else
-                            const Text('Não liberado'),
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => LiberationPage(
+                                      dependentId: dependent['id_aluno'],
+                                      dependentName: dependent['nome_aluno'],
+                                    ),
+                                  ),
+                                );
+                              },
+                              child: Text(
+                                'Liberar',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blue[800],
+                                ),
+                              ),
+                            ),
                         ],
                       ),
                     );
