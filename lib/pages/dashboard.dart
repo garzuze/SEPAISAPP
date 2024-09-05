@@ -2,6 +2,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'login_page.dart';
 import 'message_detail_page.dart';
 import 'package:intl/intl.dart';
 import 'liberation_page.dart';
@@ -84,7 +85,6 @@ class _MainPageState extends State<MainPage> {
         },
       );
 
-      // Remove any leading unexpected characters
       var cleanResponse = response.body.trim();
       final jsonStartIndex = cleanResponse.indexOf('{');
       if (jsonStartIndex > 0) {
@@ -249,9 +249,58 @@ class _MainPageState extends State<MainPage> {
     });
   }
 
+  Future<void> _logout() async {
+    // Limpar token
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('jwt');
+
+    // Ir para página de Login
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+          builder: (context) => LoginPage()),
+    );
+  }
+
+  void _confirmLogout(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Logout"),
+          content: const Text("Tem certeza que deseja sair?"),
+          actions: <Widget>[
+            TextButton(
+              child: const Text("Cancelar"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text("Sim"),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _logout();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () =>
+                _confirmLogout(context),
+          ),
+        ],
+      ),
       body: _selectedIndex == 0
           ? _buildDependentsScreen()
           : _buildMessagesScreen(),
