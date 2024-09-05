@@ -2,19 +2,47 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:async'; 
+import 'package:jwt_decode/jwt_decode.dart'; 
 
 import '../components/my_textfield.dart';
 import '../components/my_button.dart';
 import 'dashboard.dart';
 
-class LoginPage extends StatelessWidget {
-  LoginPage({super.key});
+class LoginPage extends StatefulWidget {
+  @override
+  _LoginPageState createState() => _LoginPageState();
+}
 
   // Controladores de edição de texto
+class _LoginPageState extends State<LoginPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
   // Método para logar o usuário
+  @override
+  void initState() {
+    super.initState();
+    checkToken();  // Checkar token
+  }
+
+  // Checkar se o usuário tem um token válido
+  void checkToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? token = prefs.getString('jwt');
+
+    if (token != null) {
+      bool isExpired = Jwt.isExpired(token);  // Verificar se expirou
+
+      if (!isExpired) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const MainPage()),
+        );
+      }
+    }
+  }
+
   void signUserIn(BuildContext context) async {
     final email = emailController.text;
     final password = passwordController.text;

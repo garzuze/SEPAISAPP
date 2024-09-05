@@ -10,8 +10,7 @@ class LiberationPage extends StatefulWidget {
   final String dependentName;
 
   const LiberationPage(
-      {Key? key, required this.dependentId, required this.dependentName})
-      : super(key: key);
+      {super.key, required this.dependentId, required this.dependentName});
 
   @override
   _LiberationPageState createState() => _LiberationPageState();
@@ -169,14 +168,6 @@ class _LiberationPageState extends State<LiberationPage> {
                           )),
                     )),
               ),
-              // ElevatedButton(
-              //   onPressed: _liberateDependent,
-              //   style: ElevatedButton.styleFrom(
-              //       backgroundColor: Colors.green[800]),
-              //   child: const Text(
-              //     'Autorizar saída',
-              //   ),
-              // ),
             ],
           ),
         ),
