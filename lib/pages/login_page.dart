@@ -10,6 +10,8 @@ import '../components/my_button.dart';
 import 'dashboard.dart';
 
 class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
   @override
   _LoginPageState createState() => _LoginPageState();
 }

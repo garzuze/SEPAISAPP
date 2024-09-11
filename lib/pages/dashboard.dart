@@ -20,6 +20,7 @@ class _MainPageState extends State<MainPage> {
   String? jwtToken; // JWT token para fazer requisições
   List<dynamic> dependents = []; // Lista de dependentes
   List<dynamic> liberatedDependents = []; // Lista de dependentes liberados
+  List<dynamic> authorizedDependents = []; // Lista de dependentes autorizados
   String? userFirstName; // Primeiro nome do responsável
   String decodedInfo = ''; // Informações extraídas do token
   List<dynamic> messages = []; // Placeholder para mensagens
@@ -40,6 +41,7 @@ class _MainPageState extends State<MainPage> {
         await _fetchDependents(jwtToken!);
         await _fetchMessages(jwtToken!);
         await _fetchLiberatedDependents(jwtToken!);
+        await _fetchAuthorizedDependents(jwtToken!);
       }
     } catch (e) {
       decodedInfo = 'Error initializing data: $e';
@@ -84,7 +86,6 @@ class _MainPageState extends State<MainPage> {
           'Authorization': jwtToken,
         },
       );
-
       var cleanResponse = response.body.trim();
       final jsonStartIndex = cleanResponse.indexOf('{');
       if (jsonStartIndex > 0) {
@@ -116,6 +117,54 @@ class _MainPageState extends State<MainPage> {
     }
   }
 
+  Future<void> _fetchAuthorizedDependents(String jwtToken) async {
+    try {
+      final url = Uri.parse(
+          'https://mlrh.com.br/sepais/public/api/get_dependentes_autorizados.php');
+
+      final response = await http.post(
+        url,
+        headers: {
+          'Authorization': jwtToken,
+        },
+      );
+
+      var cleanResponse = response.body.trim();
+      final jsonStartIndex = cleanResponse.indexOf('{');
+      if (jsonStartIndex > 0) {
+        cleanResponse = cleanResponse.substring(jsonStartIndex);
+      }
+      print(response.statusCode);
+      if (response.statusCode == 200) {
+        final jsonResponse = jsonDecode(cleanResponse);
+        print("Legalll");
+        if (jsonResponse['status'] == true) {
+          setState(() {
+            authorizedDependents = jsonResponse['message'];
+          });
+        } else {
+          setState(() {
+            decodedInfo =
+                'Erro ao buscar dependentes autorizados: ${jsonResponse['message']}';
+          });
+        }
+      } else {
+        setState(() {
+          decodedInfo = 'Erro: ${response.reasonPhrase}';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        decodedInfo = 'Erro: $e';
+      });
+    }
+  }
+
+  bool _isDependentAuthorized(int idAluno) {
+    return authorizedDependents
+        .any((dependent) => dependent['id_aluno'] == idAluno);
+  }
+
   Future<void> _fetchMessages(String jwtToken) async {
     try {
       final url =
@@ -127,7 +176,7 @@ class _MainPageState extends State<MainPage> {
           'Authorization': jwtToken,
         },
       );
-
+      print(response.body);
       // Remover 0 da resposta
       var cleanResponse = response.body.trim();
       final jsonStartIndex = cleanResponse.indexOf('{');
@@ -195,6 +244,7 @@ class _MainPageState extends State<MainPage> {
         },
       );
 
+      print(response.body);
       // Remover 0 da resposta
       var cleanResponse = response.body.trim();
       final jsonStartIndex = cleanResponse.indexOf('{');
@@ -257,8 +307,7 @@ class _MainPageState extends State<MainPage> {
     // Ir para página de Login
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(
-          builder: (context) => LoginPage()),
+      MaterialPageRoute(builder: (context) => LoginPage()),
     );
   }
 
@@ -296,8 +345,7 @@ class _MainPageState extends State<MainPage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () =>
-                _confirmLogout(context),
+            onPressed: () => _confirmLogout(context),
           ),
         ],
       ),
@@ -348,7 +396,8 @@ class _MainPageState extends State<MainPage> {
                         _isDependentLiberated(dependent['id_aluno']);
                     final liberationTime =
                         _formatTime(_getLiberationTime(dependent['id_aluno']));
-
+                    final isAuthorized =
+                        _isDependentAuthorized(dependent['id_aluno']);
                     return ListTile(
                       title: Text(dependent['nome_aluno']),
                       subtitle: Column(
@@ -390,8 +439,17 @@ class _MainPageState extends State<MainPage> {
                                   ),
                                 ),
                               ],
-                            )
-                          else
+                            ),
+                          if (isAuthorized)
+                            Text(
+                              'Autorizado a sair',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue[800],
+                              ),
+                            ),
+                          if (!isLiberated && !isAuthorized )
                             GestureDetector(
                               onTap: () {
                                 Navigator.push(
