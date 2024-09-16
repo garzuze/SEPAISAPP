@@ -7,6 +7,7 @@ import 'message_detail_page.dart';
 import 'package:intl/intl.dart';
 import 'liberation_page.dart';
 import 'dart:convert';
+import 'dart:async';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -63,6 +64,13 @@ class _MainPageState extends State<MainPage> {
         decodedInfo = 'Failed to decode JWT: $e';
       });
     }
+  }
+
+  void startUpdatingData(String jwtToken) {
+    Timer.periodic(const Duration(seconds: 3), (Timer timer) {
+      _fetchLiberatedDependents(jwtToken);
+      _fetchAuthorizedDependents(jwtToken);
+    });
   }
 
   String _formatTime(String dateTimeString) {
@@ -271,9 +279,7 @@ class _MainPageState extends State<MainPage> {
         });
       }
     } catch (e) {
-      setState(() {
-        decodedInfo = 'Erro: $e';
-      });
+      print("erro");
     }
   }
 
@@ -398,13 +404,14 @@ class _MainPageState extends State<MainPage> {
                         _formatTime(_getLiberationTime(dependent['id_aluno']));
                     final isAuthorized =
                         _isDependentAuthorized(dependent['id_aluno']);
+
                     return ListTile(
                       title: Text(dependent['nome_aluno']),
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text('Turma: ${dependent['turma']}'),
-                          if (isLiberated)
+                          if (isLiberated && !isAuthorized)
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -449,7 +456,7 @@ class _MainPageState extends State<MainPage> {
                                 color: Colors.blue[800],
                               ),
                             ),
-                          if (!isLiberated && !isAuthorized )
+                          if (!isLiberated && !isAuthorized)
                             GestureDetector(
                               onTap: () {
                                 Navigator.push(
