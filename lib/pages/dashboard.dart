@@ -22,6 +22,7 @@ class _MainPageState extends State<MainPage> {
   List<dynamic> dependents = []; // Lista de dependentes
   List<dynamic> liberatedDependents = []; // Lista de dependentes liberados
   List<dynamic> authorizedDependents = []; // Lista de dependentes autorizados
+  List<dynamic> exitTime = []; // Lista de dependentes que saíram
   String? userFirstName; // Primeiro nome do responsável
   String decodedInfo = ''; // Informações extraídas do token
   List<dynamic> messages = []; // Placeholder para mensagens
@@ -43,6 +44,8 @@ class _MainPageState extends State<MainPage> {
         await _fetchMessages(jwtToken!);
         await _fetchLiberatedDependents(jwtToken!);
         await _fetchAuthorizedDependents(jwtToken!);
+        await _fetchExitTime(jwtToken!);
+        startUpdatingData(jwtToken!);
       }
     } catch (e) {
       decodedInfo = 'Error initializing data: $e';
@@ -70,6 +73,7 @@ class _MainPageState extends State<MainPage> {
     Timer.periodic(const Duration(seconds: 3), (Timer timer) {
       _fetchLiberatedDependents(jwtToken);
       _fetchAuthorizedDependents(jwtToken);
+      _fetchExitTime(jwtToken);
     });
   }
 
@@ -171,6 +175,52 @@ class _MainPageState extends State<MainPage> {
   bool _isDependentAuthorized(int idAluno) {
     return authorizedDependents
         .any((dependent) => dependent['id_aluno'] == idAluno);
+  }
+
+  Future<void> _fetchExitTime(String jwtToken) async {
+    try {
+      final url = Uri.parse(
+          'https://mlrh.com.br/sepais/public/api/get_horario_saidas.php');
+
+      final response = await http.post(
+        url,
+        headers: {
+          'Authorization': jwtToken,
+        },
+      );
+
+      var cleanResponse = response.body.trim();
+      final jsonStartIndex = cleanResponse.indexOf('{');
+      if (jsonStartIndex > 0) {
+        cleanResponse = cleanResponse.substring(jsonStartIndex);
+      }
+      print(response.statusCode);
+      if (response.statusCode == 200) {
+        final jsonResponse = jsonDecode(cleanResponse);
+        if (jsonResponse['status'] == true) {
+          setState(() {
+            exitTime = jsonResponse['message'];
+          });
+        } else {
+          setState(() {
+            decodedInfo =
+                'Erro ao buscar dependentes que saíram: ${jsonResponse['message']}';
+          });
+        }
+      } else {
+        setState(() {
+          decodedInfo = 'Erro: ${response.reasonPhrase}';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        decodedInfo = 'Erro: $e';
+      });
+    }
+  }
+
+  bool _didDependentExit(int idAluno) {
+    return exitTime.any((dependent) => dependent['id_aluno'] == idAluno);
   }
 
   Future<void> _fetchMessages(String jwtToken) async {
@@ -298,6 +348,12 @@ class _MainPageState extends State<MainPage> {
     return dependent != null ? dependent['data'] : '';
   }
 
+  String _getExitTime(int idAluno) {
+    final dependent = exitTime
+        .firstWhere((d) => d['id_aluno'] == idAluno, orElse: () => null);
+    return dependent != null ? dependent['saida'] : '';
+  }
+
   // Método para trocar páginas
   void _onItemTapped(int index) {
     setState(() {
@@ -404,13 +460,24 @@ class _MainPageState extends State<MainPage> {
                         _formatTime(_getLiberationTime(dependent['id_aluno']));
                     final isAuthorized =
                         _isDependentAuthorized(dependent['id_aluno']);
-
+                    final dependentExited =
+                        _didDependentExit(dependent['id_aluno']);
+                    final exitTime = _formatTime(_getExitTime(dependent['id_aluno']));
                     return ListTile(
                       title: Text(dependent['nome_aluno']),
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text('Turma: ${dependent['turma']}'),
+                          if (dependentExited)
+                            Text(
+                              'Saiu às $exitTime',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue[800],
+                              ),
+                            ),
                           if (isLiberated && !isAuthorized)
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -447,7 +514,7 @@ class _MainPageState extends State<MainPage> {
                                 ),
                               ],
                             ),
-                          if (isAuthorized)
+                          if (isAuthorized && !dependentExited)
                             Text(
                               'Autorizado a sair',
                               style: TextStyle(
@@ -456,7 +523,7 @@ class _MainPageState extends State<MainPage> {
                                 color: Colors.blue[800],
                               ),
                             ),
-                          if (!isLiberated && !isAuthorized)
+                          if (!isLiberated && !isAuthorized && !dependentExited)
                             GestureDetector(
                               onTap: () {
                                 Navigator.push(
