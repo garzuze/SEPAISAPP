@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:async'; 
-import 'package:jwt_decode/jwt_decode.dart'; 
+import 'register_page.dart';
+import 'package:jwt_decode/jwt_decode.dart';
 
 import '../components/my_textfield.dart';
 import '../components/my_button.dart';
@@ -16,7 +16,7 @@ class LoginPage extends StatefulWidget {
   _LoginPageState createState() => _LoginPageState();
 }
 
-  // Controladores de edição de texto
+// Controladores de edição de texto
 class _LoginPageState extends State<LoginPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
@@ -25,7 +25,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-    checkToken();  // Checkar token
+    checkToken(); // Checkar token
   }
 
   // Checkar se o usuário tem um token válido
@@ -34,7 +34,7 @@ class _LoginPageState extends State<LoginPage> {
     String? token = prefs.getString('jwt');
 
     if (token != null) {
-      bool isExpired = Jwt.isExpired(token);  // Verificar se expirou
+      bool isExpired = Jwt.isExpired(token); // Verificar se expirou
 
       if (!isExpired) {
         Navigator.pushReplacement(
@@ -196,21 +196,31 @@ class _LoginPageState extends State<LoginPage> {
                 onTap: () => signUserIn(context),
               ),
               const SizedBox(height: 25),
-              const Row(
+              Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
+                  const Text(
                     'Ainda não tem uma conta?',
                     style: TextStyle(color: Color(0xFF616161)),
                   ),
-                  SizedBox(width: 4),
-                  Text(
-                    'Entre aqui!',
-                    style: TextStyle(
-                        color: Color(0xFF2E7D32), fontWeight: FontWeight.bold),
+                  const SizedBox(width: 4),
+                  InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => RegisterPage()),
+                      );
+                    },
+                    child: const Text(
+                      'Entre aqui!',
+                      style: TextStyle(
+                        color: Color(0xFF2E7D32),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   )
                 ],
-              )
+              ),
             ],
           ),
         ),
