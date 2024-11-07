@@ -111,6 +111,11 @@ class RegisterPage extends StatelessWidget {
                 style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
+              const Text(
+                'Enviaremos um código de validação.',
+                style: TextStyle(color: Color(0xFF616161), fontSize: 16),
+              ),
+              const SizedBox(height: 20),
               MyTextField(
                 mycontroller: emailController,
                 hintText: 'Email',

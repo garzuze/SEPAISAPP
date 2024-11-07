@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Auto Login Example',
+      title: 'sepais',
       home: SplashScreen(),
     );
   }
