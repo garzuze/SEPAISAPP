@@ -1,5 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dart_jsonwebtoken/dart_jsonwebtoken.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'login_page.dart';
@@ -45,6 +47,16 @@ class _MainPageState extends State<MainPage> {
         await _fetchLiberatedDependents(jwtToken!);
         await _fetchAuthorizedDependents(jwtToken!);
         await _fetchExitTime(jwtToken!);
+
+        FirebaseMessaging messaging = FirebaseMessaging.instance;
+        String? token = await messaging.getToken();
+        FirebaseMessaging.instance.onTokenRefresh.listen((fcmToken) {
+          _updateToken(token!);
+        }).onError((err) {
+          print(err);
+        });
+
+        print('Token: $token');
         startUpdatingData(jwtToken!);
       }
     } catch (e) {
@@ -267,6 +279,29 @@ class _MainPageState extends State<MainPage> {
     }
   }
 
+  Future<bool> _updateToken(String token) async {
+    try {
+      final url =
+          Uri.parse('https://mlrh.com.br/sepais/public/api/update_token.php');
+
+      final response = await http.post(
+        url,
+        headers: {
+          'Authorization': jwtToken!,
+        },
+        body: {
+          'token': token,
+        },
+      );
+
+      final jsonResponse = jsonDecode(response.body);
+
+      return jsonResponse['status'] == true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   Future<bool> _authorizeExit(int alunoId) async {
     try {
       final url =
@@ -349,8 +384,8 @@ class _MainPageState extends State<MainPage> {
   }
 
   String _getExitTime(int idAluno) {
-    final dependent = exitTime
-        .firstWhere((d) => d['id_aluno'] == idAluno, orElse: () => null);
+    final dependent = exitTime.firstWhere((d) => d['id_aluno'] == idAluno,
+        orElse: () => null);
     return dependent != null ? dependent['saida'] : '';
   }
 
@@ -369,7 +404,7 @@ class _MainPageState extends State<MainPage> {
     // Ir para página de Login
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => LoginPage()),
+      MaterialPageRoute(builder: (context) => const LoginPage()),
     );
   }
 
@@ -462,7 +497,8 @@ class _MainPageState extends State<MainPage> {
                         _isDependentAuthorized(dependent['id_aluno']);
                     final dependentExited =
                         _didDependentExit(dependent['id_aluno']);
-                    final exitTime = _formatTime(_getExitTime(dependent['id_aluno']));
+                    final exitTime =
+                        _formatTime(_getExitTime(dependent['id_aluno']));
                     return ListTile(
                       title: Text(dependent['nome_aluno']),
                       subtitle: Column(
