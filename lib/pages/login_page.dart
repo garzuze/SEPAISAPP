@@ -149,6 +149,9 @@ class _LoginPageState extends State<LoginPage> {
       backgroundColor: Colors.grey[50],
       body: SafeArea(
         child: Center(
+            child: SingleChildScrollView(
+          reverse: true,
+          padding: const EdgeInsets.all(32),
           child: Column(
             children: [
               const SizedBox(height: 50),
@@ -224,7 +227,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ],
           ),
-        ),
+        )),
       ),
     );
   }
