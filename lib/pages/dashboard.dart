@@ -50,12 +50,12 @@ class _MainPageState extends State<MainPage> {
 
         FirebaseMessaging messaging = FirebaseMessaging.instance;
         String? token = await messaging.getToken();
+        _updateToken(token!);
         FirebaseMessaging.instance.onTokenRefresh.listen((fcmToken) {
           _updateToken(token!);
         }).onError((err) {
           print(err);
         });
-
         print('Token: $token');
         startUpdatingData(jwtToken!);
       }
@@ -116,7 +116,7 @@ class _MainPageState extends State<MainPage> {
         cleanResponse = cleanResponse.substring(jsonStartIndex);
       }
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 404) {
         final jsonResponse = jsonDecode(cleanResponse);
 
         if (jsonResponse['status'] == true) {
@@ -159,7 +159,7 @@ class _MainPageState extends State<MainPage> {
         cleanResponse = cleanResponse.substring(jsonStartIndex);
       }
       print(response.statusCode);
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 404) {
         final jsonResponse = jsonDecode(cleanResponse);
         print("Legalll");
         if (jsonResponse['status'] == true) {
@@ -207,7 +207,7 @@ class _MainPageState extends State<MainPage> {
         cleanResponse = cleanResponse.substring(jsonStartIndex);
       }
       print(response.statusCode);
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 404) {
         final jsonResponse = jsonDecode(cleanResponse);
         if (jsonResponse['status'] == true) {
           setState(() {
@@ -254,7 +254,7 @@ class _MainPageState extends State<MainPage> {
         cleanResponse = cleanResponse.substring(jsonStartIndex);
       }
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 404) {
         final jsonResponse = jsonDecode(cleanResponse);
 
         if (jsonResponse['status'] == true) {
@@ -345,7 +345,7 @@ class _MainPageState extends State<MainPage> {
         cleanResponse = cleanResponse.substring(jsonStartIndex);
       }
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 404) {
         final jsonResponse = jsonDecode(cleanResponse);
 
         if (jsonResponse['status'] == true) {

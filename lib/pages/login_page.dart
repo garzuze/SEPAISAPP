@@ -78,7 +78,7 @@ class _LoginPageState extends State<LoginPage> {
         },
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 404) {
         final data = jsonDecode(response.body);
 
         if (data['status'] == true) {
@@ -98,7 +98,7 @@ class _LoginPageState extends State<LoginPage> {
           showDialog(
             context: context,
             builder: (context) => AlertDialog(
-              title: const Text("Error"),
+              title: const Text("Erro"),
               content: Text(data['message']),
               actions: [
                 TextButton(
@@ -151,7 +151,6 @@ class _LoginPageState extends State<LoginPage> {
         child: Center(
             child: SingleChildScrollView(
           reverse: true,
-          padding: const EdgeInsets.all(32),
           child: Column(
             children: [
               const SizedBox(height: 50),
@@ -182,15 +181,23 @@ class _LoginPageState extends State<LoginPage> {
                 obscureText: true,
               ),
               const SizedBox(height: 10),
-              const Padding(
+              Padding(
                 padding: EdgeInsets.symmetric(horizontal: 25.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    Text(
-                      'Esqueceu a senha?',
-                      style: TextStyle(color: Color(0xFF757575)),
-                    ),
+                    InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => RegisterPage()),
+                        );
+                      },
+                      child: const Text(
+                        'Esqueceu a senha?',
+                        style: TextStyle(color: Color(0xFF757575)),
+                      )
+                    )
                   ],
                 ),
               ),

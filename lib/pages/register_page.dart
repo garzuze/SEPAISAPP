@@ -30,7 +30,8 @@ class RegisterPage extends StatelessWidget {
       return;
     }
 
-    final url = Uri.parse('https://mlrh.com.br/sepais/public/api/send_verification_email.php');
+    final url = Uri.parse(
+        'https://mlrh.com.br/sepais/public/api/send_verification_email.php');
 
     try {
       final response = await http.post(
@@ -40,14 +41,15 @@ class RegisterPage extends StatelessWidget {
         },
       );
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 404) {
         final data = jsonDecode(response.body);
 
         if (data['status'] == true) {
           // Ir para próxima página
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => CodeVerificationPage(email: email)),
+            MaterialPageRoute(
+                builder: (context) => CodeVerificationPage(email: email)),
           );
         } else {
           showDialog(
